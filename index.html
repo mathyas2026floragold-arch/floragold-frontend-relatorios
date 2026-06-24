@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatório FloraGold v0.8.5</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <main class="main">
+      <header class="topbar">
+        <div class="hero-brand">
+          <div class="leaf-logo">🌿</div>
+          <div>
+            <h1>Relatório FloraGold v0.8.5</h1>
+            <p>Central automática de relatórios em uma única tela.</p>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <div class="folder-art">▰</div>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <article class="card system-card">
+          <div class="system-status-orb">
+            <span>🌿</span>
+          </div>
+          <div>
+            <h2>Status do sistema</h2>
+            <p><i></i>Backend conectado</p>
+          </div>
+        </article>
+
+        <article class="card security-card">
+          <div class="card-title compact"><span>🛡</span><h2>Validações obrigatórias</h2></div>
+          <ul class="check-list validation-chips">
+            <li><b>0800</b><span>Pausa 0800<br/>confirmada</span></li>
+            <li><b>✓</b><span>Sem ligação<br/>ativa</span></li>
+            <li><b>0</b><span>Status<br/>0800 = 0</span></li>
+            <li><b>✕</b><span>Cancelar se houver<br/>chamada em andamento</span></li>
+          </ul>
+        </article>
+
+        <article class="card report-card">
+          <div class="card-title">
+            <span>▣</span>
+            <div>
+              <h2>Gerar relatório</h2>
+              <p>Informe os dados e o período para o robô baixar o relatório.</p>
+            </div>
+          </div>
+
+          <form id="reportForm" autocomplete="off">
+            <div class="form-row two">
+              <label>Usuário do sistema
+                <input name="usuario" placeholder="Digite o usuário" required />
+              </label>
+              <label>Senha
+                <div class="password-wrap"><input name="senha" type="password" placeholder="Digite a senha" required /><span>◉</span></div>
+              </label>
+            </div>
+
+            <div class="form-row two type-period-row">
+              <label>Tipo de relatório
+                <select name="tipoRelatorio">
+                  <option value="Entrante">Entrante</option>
+                  <option value="Campanha">Campanha</option>
+                  <option value="Callback">Callback</option>
+                  <option value="Ramal">Ramal</option>
+                </select>
+              </label>
+
+              <label class="period-field">Período do relatório
+                <div class="date-range-wrap" id="dateRangeWrap">
+                  <input id="periodoRelatorio" type="text" placeholder="Selecione a data inicial e final" readonly required />
+                  <input name="dataInicial" id="dataInicial" type="hidden" />
+                  <input name="dataFinal" id="dataFinal" type="hidden" />
+                  <button class="calendar-trigger" id="openCalendarBtn" type="button" aria-label="Abrir calendário">📅</button>
+
+                  <div class="calendar-popover" id="calendarPopover" aria-hidden="true">
+                    <div class="calendar-header">
+                      <button type="button" id="prevMonth" aria-label="Mês anterior">‹</button>
+                      <strong id="calendarMonthLabel">Mês</strong>
+                      <button type="button" id="nextMonth" aria-label="Próximo mês">›</button>
+                    </div>
+                    <div class="calendar-weekdays">
+                      <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                    <div class="calendar-actions">
+                      <button class="btn ghost small" type="button" id="clearDates">Limpar</button>
+                      <button class="btn primary small" type="button" id="applyDates">Aplicar período</button>
+                    </div>
+                    <small class="calendar-hint" id="calendarHint">Clique na data inicial e depois na data final.</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-row two">
+              <label>Hora inicial<input name="horaInicial" type="time" required /></label>
+              <label>Hora final<input name="horaFinal" type="time" required /></label>
+            </div>
+
+            <div class="form-row three">
+              <label>Operador
+                <select name="operador" id="operadorSelect">
+                  <option>Todos os operadores</option>
+                </select>
+              </label>
+              <label>Fila
+                <select name="fila" id="filaSelect">
+                  <option>Todas as filas</option>
+                </select>
+              </label>
+              <label>Status
+                <select name="statusFiltro">
+                  <option>Todos os status</option>
+                  <option>Atendida</option>
+                  <option>Abandono</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn ghost" id="validateBtn" type="button">🛡 Validar acesso e pausa 0800</button>
+              <button class="btn primary" type="submit">⬇ Baixar relatório</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="card execution-card">
+          <div class="exec-head">
+            <div class="card-title compact"><span>◷</span><h2>Execução do relatório</h2></div>
+            <div class="exec-status">
+              <span class="badge" id="jobBadge">Aguardando</span>
+              <strong class="page-counter" id="pageCounter">0 de 0</strong>
+            </div>
+          </div>
+
+          <div class="exec-summary">
+            <div class="progress-line"><span id="linearProgress" style="width:0%"></span></div>
+            <p id="executionLine">Aguardando início da automação.</p>
+            <div class="eta-pill" id="etaPill">⏱ Tempo estimado restante: --</div>
+          </div>
+
+          <div class="execution-body">
+            <div class="progress-ring" style="--p: 0" id="progressRing">
+              <div><strong id="progressText">0%</strong><span>Progresso</span></div>
+            </div>
+            <ol class="steps" id="stepsList">
+              <li class="pending">Login concluído</li>
+              <li class="pending">Pausa 0800 validada</li>
+              <li class="pending">Relatório aberto</li>
+              <li class="pending">Filtros aplicados</li>
+              <li class="pending">Coletando páginas</li>
+              <li class="pending">Consolidando arquivo</li>
+            </ol>
+          </div>
+
+          <div class="metrics">
+            <div><span>Registros lidos</span><strong id="metricRows">0</strong></div>
+            <div><span>Linhas por página</span><strong id="metricPageRows">3000</strong></div>
+            <div><span>Velocidade média</span><strong id="metricSpeed">—</strong></div>
+            <div><span>Tempo decorrido</span><strong id="metricTime">00m00s</strong></div>
+          </div>
+          <p class="process-note">ⓘ Processo em andamento. Não feche esta página.</p>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="card result-card" id="resultCard">
+          <div class="result-title"><span>✓</span><h2>Relatório pronto</h2></div>
+          <div class="result-content">
+            <div class="result-stat"><span>Total de registros</span><strong id="totalRows">—</strong></div>
+            <div class="result-stat"><span>Páginas capturadas</span><strong id="totalPages">—</strong></div>
+            <div class="result-stat"><span>Tempo total</span><strong id="totalTime">—</strong></div>
+            <div class="file-name"><span>Arquivo final</span><strong id="finalFile">Aguardando execução</strong></div>
+          </div>
+          <div class="download-actions">
+            <a class="btn success disabled" id="downloadCsv" href="#">⬇ Baixar CSV</a>
+            <a class="btn excel disabled" id="downloadXlsx" href="#">▣ Baixar Excel</a>
+            <button class="btn ghost" id="rerunBtn" type="button">↻ Gerar novamente</button>
+          </div>
+        </article>
+
+        <article class="card history-card" id="historyCard">
+          <div class="history-head">
+            <div class="card-title compact"><span>◴</span><h2>Últimas execuções</h2></div>
+            <button class="btn ghost small" type="button">Ver histórico completo ›</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Data e hora</th><th>Relatório</th><th>Registros</th><th>Status</th><th>Duração</th><th></th></tr>
+            </thead>
+            <tbody id="historyRows">
+              <tr><td colspan="6">Carregando histórico...</td></tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <section class="card quick-settings" id="settingsCard">
+        <div class="card-title compact"><span>⚙</span><h2>Configurações rápidas</h2></div>
+        <div class="settings-grid">
+          <label><input type="checkbox" checked /> Ativar automaticamente a pausa Ligação 0800</label>
+          <label><input type="checkbox" checked /> Cancelar se houver ligação ativa</label>
+          <label><input type="checkbox" checked /> Só continuar quando aparecer “1002 - Ligação 0800”</label>
+          <label><input type="checkbox" checked /> Salvar prints em caso de erro</label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
