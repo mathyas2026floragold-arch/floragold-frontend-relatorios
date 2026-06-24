@@ -111,7 +111,7 @@ function updateExecutionCounter(job) {
     ? `${Math.max(1, Math.round(currentPage / Math.max((Date.now() - timerStart) / 60000, 0.1)))} páginas/min`
     : '—');
 
-  if (counter) counter.textContent = totalPages ? `${currentPage || 0} de ${totalPages}` : (currentPage ? `${currentPage} de ?` : '0 de 0');
+  if (counter) counter.textContent = totalPages ? `${currentPage || 0} de ${totalPages}` : (currentPage ? `${currentPage} de ?` : '0 de ?');
   if (line) line.textContent = job.step || 'Aguardando início da automação.';
   if (eta) eta.textContent = `⏱ Tempo estimado restante: ${job.status === 'done' ? '00m 00s' : calculateEta(job)}`;
   $('#metricRows').textContent = rows.toLocaleString('pt-BR');
@@ -211,15 +211,15 @@ async function pollJob(jobId) {
   }
 }
 
-function estimateRows(progress) {
-  const max = 61358;
-  const p = Math.max(0, Math.min(95, Number(progress || 0)));
-  return Math.round((p / 95) * max);
+function estimateRows() {
+  // Não usamos mais estimativa fixa de 61 mil registros.
+  // O número certo vem do backend depois que o filtro de período é aplicado.
+  return 0;
 }
 
 function renderResult(result) {
   if (!result) return;
-  $('#totalRows').textContent = Number(result.totalRegistros || 0).toLocaleString('pt-BR');
+  $('#totalRows').textContent = Number(result.totalRegistros || result.registrosCapturados || 0).toLocaleString('pt-BR');
   $('#totalPages').textContent = result.paginasCapturadas || '—';
   $('#totalTime').textContent = result.tempoTotal || '—';
   $('#finalFile').textContent = result.csvFile || 'relatório.csv';
@@ -244,7 +244,7 @@ form.addEventListener('submit', async (e) => {
   $('#totalPages').textContent = '—';
   $('#totalTime').textContent = '—';
   $('#finalFile').textContent = 'Gerando...';
-  $('#pageCounter').textContent = '0 de 0';
+  $('#pageCounter').textContent = '0 de ?';
   $('#executionLine').textContent = 'Iniciando automação...';
   $('#etaPill').textContent = '⏱ Tempo estimado restante: calculando...';
   $('#metricSpeed').textContent = '—';
@@ -318,9 +318,7 @@ async function loadHistory() {
 
 function seedHistory() {
   return `
-    <tr><td>23/06/2026 08:45</td><td>Entrante</td><td>61.358</td><td><span class="status-pill">Sucesso</span></td><td>03m41s</td><td>⬇</td></tr>
-    <tr><td>22/06/2026 22:15</td><td>Entrante</td><td>58.923</td><td><span class="status-pill">Sucesso</span></td><td>03m28s</td><td>⬇</td></tr>
-    <tr><td>22/06/2026 08:30</td><td>Entrante</td><td>59.112</td><td><span class="status-pill">Sucesso</span></td><td>03m35s</td><td>⬇</td></tr>
+    <tr><td colspan="6">Nenhuma execução real carregada ainda.</td></tr>
   `;
 }
 
