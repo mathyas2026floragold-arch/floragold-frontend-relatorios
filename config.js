@@ -1,5 +1,4 @@
-// Configure aqui a URL do backend publicado no Render.
-// Exemplo: https://central-relatorios-backend.onrender.com
+// URL do backend publicado no Render.
 window.RELATORIOS_CONFIG = {
-  API_BASE_URL: 'http://localhost:3000'
+  API_BASE_URL: 'https://floragold-backend-relatorios.onrender.com'
 };

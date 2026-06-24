@@ -27,184 +27,56 @@ const demoOperators = [
 const demoFilas = ['Todas as filas', 'rcpt0800', 'Atendimento', 'Cobrança', 'Equipe 1', 'Equipe 2'];
 
 
-const monthNames = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-];
-
-const datePickerState = {
-  view: new Date(),
-  start: null,
-  end: null
-};
-
-datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth(), 1);
-
-function cloneDate(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function formatBrDate(date) {
-  if (!date) return '';
-  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-}
-
-function sameDay(a, b) {
-  return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function isBetween(date, start, end) {
-  if (!date || !start || !end) return false;
-  const d = cloneDate(date).getTime();
-  return d > cloneDate(start).getTime() && d < cloneDate(end).getTime();
-}
-
-function updateDateRangeInput(previewOnly = false) {
-  const input = $('#periodoRelatorio');
-  const dataInicial = $('#dataInicial');
-  const dataFinal = $('#dataFinal');
-  const hint = $('#calendarHint');
-  const { start, end } = datePickerState;
-
-  if (!start && !end) {
-    input.value = '';
-    if (!previewOnly) {
-      dataInicial.value = '';
-      dataFinal.value = '';
-    }
-    hint.textContent = 'Clique na data inicial e depois na data final.';
-    return;
+function normalizeTypedDate(value) {
+  const raw = String(value || '').trim();
+  const digits = raw.replace(/\D/g, '');
+  if (/^\d{8}$/.test(digits)) {
+    return `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4,8)}`;
   }
-
-  if (start && !end) {
-    input.value = `${formatBrDate(start)} até ...`;
-    hint.textContent = 'Agora selecione a data final.';
-    if (!previewOnly) {
-      dataInicial.value = '';
-      dataFinal.value = '';
-    }
-    return;
-  }
-
-  input.value = `${formatBrDate(start)} até ${formatBrDate(end)}`;
-  hint.textContent = 'Período selecionado. Clique em Aplicar período.';
-  if (!previewOnly) {
-    dataInicial.value = formatBrDate(start);
-    dataFinal.value = formatBrDate(end);
-  }
+  const br = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return raw;
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return raw;
 }
 
-function renderCalendar() {
-  const grid = $('#calendarGrid');
-  const label = $('#calendarMonthLabel');
-  if (!grid || !label) return;
-
-  const view = datePickerState.view;
-  const year = view.getFullYear();
-  const month = view.getMonth();
-  const today = cloneDate(new Date());
-  const firstDay = new Date(year, month, 1).getDay();
-  const lastDate = new Date(year, month + 1, 0).getDate();
-
-  label.textContent = `${monthNames[month]} de ${year}`;
-  grid.innerHTML = '';
-
-  for (let i = 0; i < firstDay; i++) {
-    const blank = document.createElement('span');
-    blank.className = 'calendar-blank';
-    grid.appendChild(blank);
-  }
-
-  for (let day = 1; day <= lastDate; day++) {
-    const date = new Date(year, month, day);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'calendar-day';
-    btn.textContent = String(day);
-
-    if (sameDay(date, today)) btn.classList.add('today');
-    if (sameDay(date, datePickerState.start) || sameDay(date, datePickerState.end)) btn.classList.add('selected');
-    if (isBetween(date, datePickerState.start, datePickerState.end)) btn.classList.add('range');
-
-    btn.addEventListener('click', () => selectCalendarDay(date));
-    grid.appendChild(btn);
-  }
+function parseBRDate(value) {
+  const normalized = normalizeTypedDate(value);
+  const m = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const day = Number(m[1]);
+  const month = Number(m[2]);
+  const year = Number(m[3]);
+  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const d = new Date(year, month - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  return d;
 }
 
-function selectCalendarDay(date) {
-  const selected = cloneDate(date);
-  const { start, end } = datePickerState;
-
-  if (!start || (start && end)) {
-    datePickerState.start = selected;
-    datePickerState.end = null;
-  } else if (selected.getTime() < start.getTime()) {
-    datePickerState.end = start;
-    datePickerState.start = selected;
-  } else {
-    datePickerState.end = selected;
-  }
-
-  updateDateRangeInput(true);
-  renderCalendar();
-}
-
-function openCalendar() {
-  const popover = $('#calendarPopover');
-  if (!popover) return;
-  popover.classList.add('open');
-  popover.setAttribute('aria-hidden', 'false');
-  renderCalendar();
-}
-
-function closeCalendar() {
-  const popover = $('#calendarPopover');
-  if (!popover) return;
-  popover.classList.remove('open');
-  popover.setAttribute('aria-hidden', 'true');
-}
-
-function setupDateRangePicker() {
-  const input = $('#periodoRelatorio');
-  const openBtn = $('#openCalendarBtn');
-  const popover = $('#calendarPopover');
-  if (!input || !openBtn || !popover) return;
-
-  input.addEventListener('click', openCalendar);
-  openBtn.addEventListener('click', openCalendar);
-
-  $('#prevMonth')?.addEventListener('click', () => {
-    datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth() - 1, 1);
-    renderCalendar();
+function applyDateMask(input) {
+  input.addEventListener('input', () => {
+    const digits = input.value.replace(/\D/g, '').slice(0, 8);
+    let out = digits;
+    if (digits.length > 4) out = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`;
+    else if (digits.length > 2) out = `${digits.slice(0,2)}/${digits.slice(2)}`;
+    input.value = out;
   });
+}
 
-  $('#nextMonth')?.addEventListener('click', () => {
-    datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth() + 1, 1);
-    renderCalendar();
-  });
-
-  $('#clearDates')?.addEventListener('click', () => {
-    datePickerState.start = null;
-    datePickerState.end = null;
-    updateDateRangeInput(false);
-    renderCalendar();
-  });
-
-  $('#applyDates')?.addEventListener('click', () => {
-    if (!datePickerState.start || !datePickerState.end) {
-      notify('Selecione a data inicial e a data final.');
-      return;
-    }
-    updateDateRangeInput(false);
-    closeCalendar();
-  });
-
-  document.addEventListener('click', (event) => {
-    const wrap = $('#dateRangeWrap');
-    if (wrap && !wrap.contains(event.target)) closeCalendar();
-  });
-
-  renderCalendar();
+function validateDateRange(payload) {
+  payload.dataInicial = normalizeTypedDate(payload.dataInicial);
+  payload.dataFinal = normalizeTypedDate(payload.dataFinal);
+  const start = parseBRDate(payload.dataInicial);
+  const end = parseBRDate(payload.dataFinal);
+  if (!start || !end) {
+    notify('Informe data inicial e data final no formato dd/mm/aaaa.');
+    return false;
+  }
+  if (end < start) {
+    notify('A data final não pode ser menor que a data inicial.');
+    return false;
+  }
+  return true;
 }
 
 function setupSelects() {
@@ -222,7 +94,10 @@ function notify(message) {
 
 function formData() {
   const fd = new FormData(form);
-  return Object.fromEntries(fd.entries());
+  const payload = Object.fromEntries(fd.entries());
+  payload.dataInicial = normalizeTypedDate(payload.dataInicial);
+  payload.dataFinal = normalizeTypedDate(payload.dataFinal);
+  return payload;
 }
 
 function setProgress(value) {
@@ -268,7 +143,7 @@ function updateExecutionCounter(job) {
     ? `${Math.max(1, Math.round(currentPage / Math.max((Date.now() - timerStart) / 60000, 0.1)))} páginas/min`
     : '—');
 
-  if (counter) counter.textContent = totalPages ? `${currentPage || 0} de ${totalPages}` : (currentPage ? `${currentPage} de ?` : '0 de 0');
+  if (counter) counter.textContent = totalPages ? `${currentPage || 0} de ${totalPages}` : (currentPage ? `${currentPage} de ?` : '0 de ?');
   if (line) line.textContent = job.step || 'Aguardando início da automação.';
   if (eta) eta.textContent = `⏱ Tempo estimado restante: ${job.status === 'done' ? '00m 00s' : calculateEta(job)}`;
   $('#metricRows').textContent = rows.toLocaleString('pt-BR');
@@ -368,15 +243,15 @@ async function pollJob(jobId) {
   }
 }
 
-function estimateRows(progress) {
-  const max = 61358;
-  const p = Math.max(0, Math.min(95, Number(progress || 0)));
-  return Math.round((p / 95) * max);
+function estimateRows() {
+  // Não usamos mais estimativa fixa de 61 mil registros.
+  // O número certo vem do backend depois que o filtro de período é aplicado.
+  return 0;
 }
 
 function renderResult(result) {
   if (!result) return;
-  $('#totalRows').textContent = Number(result.totalRegistros || 0).toLocaleString('pt-BR');
+  $('#totalRows').textContent = Number(result.totalRegistros || result.registrosCapturados || 0).toLocaleString('pt-BR');
   $('#totalPages').textContent = result.paginasCapturadas || '—';
   $('#totalTime').textContent = result.tempoTotal || '—';
   $('#finalFile').textContent = result.csvFile || 'relatório.csv';
@@ -392,11 +267,7 @@ function renderResult(result) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = formData();
-  if (!payload.dataInicial || !payload.dataFinal) {
-    notify('Selecione o período do relatório no calendário.');
-    openCalendar();
-    return;
-  }
+  if (!validateDateRange(payload)) return;
   setProgress(0);
   setBadge('queued');
   $('#downloadCsv').classList.add('disabled');
@@ -405,7 +276,7 @@ form.addEventListener('submit', async (e) => {
   $('#totalPages').textContent = '—';
   $('#totalTime').textContent = '—';
   $('#finalFile').textContent = 'Gerando...';
-  $('#pageCounter').textContent = '0 de 0';
+  $('#pageCounter').textContent = '0 de ?';
   $('#executionLine').textContent = 'Iniciando automação...';
   $('#etaPill').textContent = '⏱ Tempo estimado restante: calculando...';
   $('#metricSpeed').textContent = '—';
@@ -427,11 +298,7 @@ form.addEventListener('submit', async (e) => {
 
 validateBtn.addEventListener('click', async () => {
   const payload = formData();
-  if (!payload.dataInicial || !payload.dataFinal) {
-    notify('Selecione o período do relatório no calendário.');
-    openCalendar();
-    return;
-  }
+  if (!validateDateRange(payload)) return;
   try {
     validateBtn.disabled = true;
     validateBtn.textContent = 'Validando...';
@@ -447,7 +314,7 @@ validateBtn.addEventListener('click', async () => {
     notify(err.message);
   } finally {
     validateBtn.disabled = false;
-    validateBtn.textContent = '🛡 Validar acesso e pausa';
+    validateBtn.textContent = '🛡 Validar acesso e pausa 0800';
   }
 });
 
@@ -483,20 +350,19 @@ async function loadHistory() {
 
 function seedHistory() {
   return `
-    <tr><td>23/06/2026 08:45</td><td>Entrante</td><td>61.358</td><td><span class="status-pill">Sucesso</span></td><td>03m41s</td><td>⬇</td></tr>
-    <tr><td>22/06/2026 22:15</td><td>Entrante</td><td>58.923</td><td><span class="status-pill">Sucesso</span></td><td>03m28s</td><td>⬇</td></tr>
-    <tr><td>22/06/2026 08:30</td><td>Entrante</td><td>59.112</td><td><span class="status-pill">Sucesso</span></td><td>03m35s</td><td>⬇</td></tr>
+    <tr><td colspan="6">Nenhuma execução real carregada ainda.</td></tr>
   `;
 }
 
 async function init() {
+  applyDateMask(document.getElementById('dataInicial'));
+  applyDateMask(document.getElementById('dataFinal'));
   setupSelects();
-  setupDateRangePicker();
   await loadHistory();
   try {
     const res = await fetch(apiUrl('/api/status'));
     const data = await res.json();
-    if (data.demoMode) notify('Projeto em modo demonstração. Para usar no sistema real, altere DEMO_MODE=false.');
+    if (data.demoMode) notify('Modo demonstração ativo: o sistema simula o relatório. Para usar o FloraGold real, no Render coloque DEMO_MODE=false.');
   } catch {}
 }
 

@@ -1,48 +1,18 @@
-# Frontend Netlify - Central de Relatórios
+# Frontend FloraGold v9
 
-Este é somente o front-end estático.
+Front-end para GitHub Pages, já apontando para o backend Render.
 
-## Publicar no Netlify
-1. Envie esta pasta para um repositório GitHub.
-2. No Netlify, crie um novo site usando esse repositório.
-3. Build command: deixe vazio.
-4. Publish directory: `.`
+A tela usa apenas:
 
-## Conectar ao backend do Render
-Depois que o backend estiver publicado no Render, edite o arquivo `config.js`:
+- data inicial
+- data final
+- tipo de relatório
+- operador/fila/status opcionais
 
-```js
-window.RELATORIOS_CONFIG = {
-  API_BASE_URL: 'https://SEU-BACKEND.onrender.com'
-};
-```
+Não há filtro de horário na interface. O backend trata o período como dia completo.
 
-Não coloque barra no final da URL.
 
-## Atualizações desta versão
-- Campos de usuário e senha vêm em branco.
-- O período agora é selecionado por um calendário de intervalo: clique no campo "Período do relatório", escolha a data inicial e a data final e depois clique em "Aplicar período".
-- As horas inicial e final ficam separadas como campos de horário.
-
-## Versão completa preservada
-
-Esta versão mantém todos os blocos do projeto e adiciona o contador de execução:
-
-- contador de página atual, exemplo: `3 de 21`;
-- tempo estimado restante;
-- velocidade média de captura;
-- registros lidos;
-- progresso circular e barra linear;
-- resultado final com CSV/Excel;
-- histórico resumido;
-- configurações rápidas.
-
-Nenhuma função foi removida para adicionar o contador.
-
-## Atualização FloraGold v0.8.5
-- Visual verde brilhante no estilo FloraGold.
-- Layout sem barra lateral.
-- Cabeçalho principal com identidade FloraGold.
-- Status do sistema reduzido para um bloco pequeno.
-- Validações obrigatórias em chips/cards mais bonitos.
-- Mantém formulário, calendário de período, execução em tempo real, resultado, downloads, histórico e configurações rápidas.
+## Ajuste v12
+- Front-end sem campos de hora.
+- Datas em texto `dd/mm/aaaa`, sem limite 2025/2027 e sem calendário nativo que falhava.
+- Backend continua aplicando o dia inteiro internamente: 00:00 até 23:59.
