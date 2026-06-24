@@ -73,37 +73,17 @@
                 </select>
               </label>
 
-              <label class="period-field">Período do relatório
-                <div class="date-range-wrap" id="dateRangeWrap">
-                  <input id="periodoRelatorio" type="text" placeholder="Selecione a data inicial e final" readonly required />
-                  <input name="dataInicial" id="dataInicial" type="hidden" />
-                  <input name="dataFinal" id="dataFinal" type="hidden" />
-                  <button class="calendar-trigger" id="openCalendarBtn" type="button" aria-label="Abrir calendário">📅</button>
-
-                  <div class="calendar-popover" id="calendarPopover" aria-hidden="true">
-                    <div class="calendar-header">
-                      <button type="button" id="prevMonth" aria-label="Mês anterior">‹</button>
-                      <strong id="calendarMonthLabel">Mês</strong>
-                      <button type="button" id="nextMonth" aria-label="Próximo mês">›</button>
-                    </div>
-                    <div class="calendar-weekdays">
-                      <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
-                    </div>
-                    <div class="calendar-grid" id="calendarGrid"></div>
-                    <div class="calendar-actions">
-                      <button class="btn ghost small" type="button" id="clearDates">Limpar</button>
-                      <button class="btn primary small" type="button" id="applyDates">Aplicar período</button>
-                    </div>
-                    <small class="calendar-hint" id="calendarHint">Clique na data inicial e depois na data final.</small>
-                  </div>
-                </div>
-              </label>
+              <div class="date-pair period-field">
+                <label>Data inicial
+                  <input name="dataInicial" id="dataInicial" type="date" required />
+                </label>
+                <label>Data final
+                  <input name="dataFinal" id="dataFinal" type="date" required />
+                </label>
+              </div>
             </div>
 
-            <div class="form-row two">
-              <label>Hora inicial<input name="horaInicial" type="time" required /></label>
-              <label>Hora final<input name="horaFinal" type="time" required /></label>
-            </div>
+            <p class="period-note">O relatório será gerado pelo dia completo: 00:00 até 23:59. Não precisa informar horário.</p>
 
             <div class="form-row three">
               <label>Operador

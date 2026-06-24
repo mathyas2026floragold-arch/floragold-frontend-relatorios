@@ -27,184 +27,27 @@ const demoOperators = [
 const demoFilas = ['Todas as filas', 'rcpt0800', 'Atendimento', 'Cobrança', 'Equipe 1', 'Equipe 2'];
 
 
-const monthNames = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-];
-
-const datePickerState = {
-  view: new Date(),
-  start: null,
-  end: null
-};
-
-datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth(), 1);
-
-function cloneDate(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+function toISODate(value) {
+  return String(value || '').trim();
 }
 
-function formatBrDate(date) {
-  if (!date) return '';
-  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+function brDateFromISO(value) {
+  if (!value) return '';
+  const [year, month, day] = String(value).split('-');
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
 }
 
-function sameDay(a, b) {
-  return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function isBetween(date, start, end) {
-  if (!date || !start || !end) return false;
-  const d = cloneDate(date).getTime();
-  return d > cloneDate(start).getTime() && d < cloneDate(end).getTime();
-}
-
-function updateDateRangeInput(previewOnly = false) {
-  const input = $('#periodoRelatorio');
-  const dataInicial = $('#dataInicial');
-  const dataFinal = $('#dataFinal');
-  const hint = $('#calendarHint');
-  const { start, end } = datePickerState;
-
-  if (!start && !end) {
-    input.value = '';
-    if (!previewOnly) {
-      dataInicial.value = '';
-      dataFinal.value = '';
-    }
-    hint.textContent = 'Clique na data inicial e depois na data final.';
-    return;
+function validateDateRange(payload) {
+  if (!payload.dataInicial || !payload.dataFinal) {
+    notify('Selecione a data inicial e a data final.');
+    return false;
   }
-
-  if (start && !end) {
-    input.value = `${formatBrDate(start)} até ...`;
-    hint.textContent = 'Agora selecione a data final.';
-    if (!previewOnly) {
-      dataInicial.value = '';
-      dataFinal.value = '';
-    }
-    return;
+  if (payload.dataFinal < payload.dataInicial) {
+    notify('A data final não pode ser menor que a data inicial.');
+    return false;
   }
-
-  input.value = `${formatBrDate(start)} até ${formatBrDate(end)}`;
-  hint.textContent = 'Período selecionado. Clique em Aplicar período.';
-  if (!previewOnly) {
-    dataInicial.value = formatBrDate(start);
-    dataFinal.value = formatBrDate(end);
-  }
-}
-
-function renderCalendar() {
-  const grid = $('#calendarGrid');
-  const label = $('#calendarMonthLabel');
-  if (!grid || !label) return;
-
-  const view = datePickerState.view;
-  const year = view.getFullYear();
-  const month = view.getMonth();
-  const today = cloneDate(new Date());
-  const firstDay = new Date(year, month, 1).getDay();
-  const lastDate = new Date(year, month + 1, 0).getDate();
-
-  label.textContent = `${monthNames[month]} de ${year}`;
-  grid.innerHTML = '';
-
-  for (let i = 0; i < firstDay; i++) {
-    const blank = document.createElement('span');
-    blank.className = 'calendar-blank';
-    grid.appendChild(blank);
-  }
-
-  for (let day = 1; day <= lastDate; day++) {
-    const date = new Date(year, month, day);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'calendar-day';
-    btn.textContent = String(day);
-
-    if (sameDay(date, today)) btn.classList.add('today');
-    if (sameDay(date, datePickerState.start) || sameDay(date, datePickerState.end)) btn.classList.add('selected');
-    if (isBetween(date, datePickerState.start, datePickerState.end)) btn.classList.add('range');
-
-    btn.addEventListener('click', () => selectCalendarDay(date));
-    grid.appendChild(btn);
-  }
-}
-
-function selectCalendarDay(date) {
-  const selected = cloneDate(date);
-  const { start, end } = datePickerState;
-
-  if (!start || (start && end)) {
-    datePickerState.start = selected;
-    datePickerState.end = null;
-  } else if (selected.getTime() < start.getTime()) {
-    datePickerState.end = start;
-    datePickerState.start = selected;
-  } else {
-    datePickerState.end = selected;
-  }
-
-  updateDateRangeInput(true);
-  renderCalendar();
-}
-
-function openCalendar() {
-  const popover = $('#calendarPopover');
-  if (!popover) return;
-  popover.classList.add('open');
-  popover.setAttribute('aria-hidden', 'false');
-  renderCalendar();
-}
-
-function closeCalendar() {
-  const popover = $('#calendarPopover');
-  if (!popover) return;
-  popover.classList.remove('open');
-  popover.setAttribute('aria-hidden', 'true');
-}
-
-function setupDateRangePicker() {
-  const input = $('#periodoRelatorio');
-  const openBtn = $('#openCalendarBtn');
-  const popover = $('#calendarPopover');
-  if (!input || !openBtn || !popover) return;
-
-  input.addEventListener('click', openCalendar);
-  openBtn.addEventListener('click', openCalendar);
-
-  $('#prevMonth')?.addEventListener('click', () => {
-    datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth() - 1, 1);
-    renderCalendar();
-  });
-
-  $('#nextMonth')?.addEventListener('click', () => {
-    datePickerState.view = new Date(datePickerState.view.getFullYear(), datePickerState.view.getMonth() + 1, 1);
-    renderCalendar();
-  });
-
-  $('#clearDates')?.addEventListener('click', () => {
-    datePickerState.start = null;
-    datePickerState.end = null;
-    updateDateRangeInput(false);
-    renderCalendar();
-  });
-
-  $('#applyDates')?.addEventListener('click', () => {
-    if (!datePickerState.start || !datePickerState.end) {
-      notify('Selecione a data inicial e a data final.');
-      return;
-    }
-    updateDateRangeInput(false);
-    closeCalendar();
-  });
-
-  document.addEventListener('click', (event) => {
-    const wrap = $('#dateRangeWrap');
-    if (wrap && !wrap.contains(event.target)) closeCalendar();
-  });
-
-  renderCalendar();
+  return true;
 }
 
 function setupSelects() {
@@ -392,11 +235,7 @@ function renderResult(result) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = formData();
-  if (!payload.dataInicial || !payload.dataFinal) {
-    notify('Selecione o período do relatório no calendário.');
-    openCalendar();
-    return;
-  }
+  if (!validateDateRange(payload)) return;
   setProgress(0);
   setBadge('queued');
   $('#downloadCsv').classList.add('disabled');
@@ -427,11 +266,7 @@ form.addEventListener('submit', async (e) => {
 
 validateBtn.addEventListener('click', async () => {
   const payload = formData();
-  if (!payload.dataInicial || !payload.dataFinal) {
-    notify('Selecione o período do relatório no calendário.');
-    openCalendar();
-    return;
-  }
+  if (!validateDateRange(payload)) return;
   try {
     validateBtn.disabled = true;
     validateBtn.textContent = 'Validando...';
@@ -491,12 +326,11 @@ function seedHistory() {
 
 async function init() {
   setupSelects();
-  setupDateRangePicker();
   await loadHistory();
   try {
     const res = await fetch(apiUrl('/api/status'));
     const data = await res.json();
-    if (data.demoMode) notify('Projeto em modo demonstração. Para usar no sistema real, altere DEMO_MODE=false.');
+    if (data.demoMode) notify('Modo demonstração ativo: o sistema simula o relatório. Para usar o FloraGold real, no Render coloque DEMO_MODE=false.');
   } catch {}
 }
 
